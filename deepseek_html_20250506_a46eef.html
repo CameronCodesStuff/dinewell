@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dining Well Delusion Simulator</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #f5f5dc;
+            text-align: center;
+            padding: 20px;
+            transition: background-color 1s;
+        }
+        #game-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #progress-container {
+            height: 30px;
+            background-color: #e0e0e0;
+            border-radius: 15px;
+            margin: 20px 0;
+            overflow: hidden;
+            position: relative;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #4CAF50;
+            transition: width 0.5s;
+        }
+        #progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: transform 0.1s;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        #message {
+            min-height: 60px;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        #unlock-container {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            display: none;
+        }
+        #next-unlock {
+            font-weight: bold;
+            color: #ff5722;
+        }
+        #total-points {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Dining Well Delusion Simulator</h1>
+        <p>Click to dine well and make progress!</p>
+        
+        <div id="total-points">0 points</div>
+        
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+            <div id="progress-text">0%</div>
+        </div>
+        
+        <div id="message">Start dining to begin your journey!</div>
+        
+        <button id="dine-button">Dine Well</button>
+        <button id="premium-button" style="background-color: #ff9800;">Premium Dining (Costs 1000 points)</button>
+        
+        <div id="unlock-container">
+            <h3>Next Unlock:</h3>
+            <div id="next-unlock">Silver Cutlery Set</div>
+            <div id="unlock-description">Unlocks at 10,000 points</div>
+            <div id="unlock-progress">0.00% of the way there!</div>
+        </div>
+    </div>
+    
+    <div id="celebration" class="celebration"></div>
+    
+    <script>
+        let points = 0;
+        let progress = 0;
+        let nextUnlock = 10000;
+        let unlockName = "Silver Cutlery Set";
+        let baseValue = 1;
+        let premiumUnlocked = false;
+        
+        const dineButton = document.getElementById('dine-button');
+        const premiumButton = document.getElementById('premium-button');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const messageEl = document.getElementById('message');
+        const totalPointsEl = document.getElementById('total-points');
+        const unlockContainer = document.getElementById('unlock-container');
+        const nextUnlockEl = document.getElementById('next-unlock');
+        const unlockDescEl = document.getElementById('unlock-description');
+        const unlockProgressEl = document.getElementById('unlock-progress');
+        const celebrationEl = document.getElementById('celebration');
+        
+        // Initial setup
+        updateDisplay();
+        unlockContainer.style.display = 'block';
+        
+        dineButton.addEventListener('click', function() {
+            addPoints(baseValue);
+        });
+        
+        premiumButton.addEventListener('click', function() {
+            if (points >= 1000 && !premiumUnlocked) {
+                points -= 1000;
+                premiumUnlocked = true;
+                baseValue = 5;
+                messageEl.textContent = "Premium Dining unlocked! Each click is now worth 5 points!";
+                premiumButton.textContent = "Premium Dining (Active)";
+                premiumButton.style.backgroundColor = "#8bc34a";
+                createConfetti();
+            } else if (!premiumUnlocked) {
+                messageEl.textContent = "You need 1000 points for Premium Dining!";
+            }
+            updateDisplay();
+        });
+        
+        function addPoints(amount) {
+            points += amount;
+            
+            // Fake progress system that slows down dramatically
+            if (points < 100) {
+                progress = points;
+            } else if (points < 500) {
+                progress = 100 + (points - 100) * 0.5;
+            } else if (points < 2000) {
+                progress = 300 + (points - 500) * 0.1;
+            } else {
+                progress = 450 + (points - 2000) * 0.01;
+            }
+            
+            // Cap progress at 100% for the visual bar
+            let displayProgress = Math.min(progress, 100);
+            
+            // Update messages based on progress
+            if (points < 50) {
+                messageEl.textContent = "You're dining so well! Look at you go!";
+            } else if (points < 200) {
+                messageEl.textContent = "Wow, you're really getting the hang of this dining thing!";
+            } else if (points < 1000) {
+                messageEl.textContent = "Amazing progress! You'll unlock the next tier in no time!";
+            } else if (points < 5000) {
+                messageEl.textContent = "Keep going! You're making great strides!";
+            } else {
+                // Reality sets in
+                const percentage = (points / nextUnlock * 100).toFixed(4);
+                messageEl.textContent = `Wait... you're only ${percentage}% of the way to the next unlock? This is taking forever!`;
+                
+                // Change background color to represent the despair
+                document.body.style.backgroundColor = "#ffe6e6";
+            }
+            
+            // Update next unlock info
+            const percentageToNext = (points / nextUnlock * 100).toFixed(6);
+            nextUnlockEl.textContent = unlockName;
+            unlockDescEl.textContent = `Unlocks at ${nextUnlock.toLocaleString()} points`;
+            unlockProgressEl.textContent = `${percentageToNext}% of the way there!`;
+            
+            // Visual progress update with dramatic slowdown
+            progressBar.style.width = `${displayProgress}%`;
+            progressText.textContent = `${Math.floor(displayProgress)}%`;
+            
+            // Update total points display with occasional celebratory messages
+            totalPointsEl.textContent = `${points.toLocaleString()} points`;
+            if (points === 100 || points === 500 || points === 1000) {
+                createConfetti();
+                messageEl.textContent += " Achievement unlocked!";
+            }
+            
+            // Every 2000 points, increase the next unlock target exponentially
+            if (points >= nextUnlock * 0.5 && points < 100000) {
+                nextUnlock = nextUnlock * 5;
+                unlockName = getNextUnlockName(unlockName);
+                messageEl.textContent = `Great! You're halfway to ${unlockName}! Just ${Math.floor(nextUnlock * 0.5).toLocaleString()} more points to go!`;
+            }
+        }
+        
+        function getNextUnlockName(current) {
+            const unlocks = [
+                "Gold-Plated Cutlery",
+                "Diamond-Encrusted Plates",
+                "Celebrity Chef Endorsement",
+                "Michelin Star Rating",
+                "Personal Sommelier",
+                "Underground Supper Club Access",
+                "Interstellar Dining License",
+                "Omniversal Flavor Patent",
+                "Theoretical Gastronomy Degree",
+                "Transcendental Dining Experience"
+            ];
+            
+            const currentIndex = unlocks.indexOf(current);
+            return currentIndex < unlocks.length - 1 ? unlocks[currentIndex + 1] : unlocks[unlocks.length - 1] + " (Level " + (currentIndex - unlocks.length + 3) + ")";
+        }
+        
+        function updateDisplay() {
+            totalPointsEl.textContent = `${points.toLocaleString()} points`;
+            const displayProgress = Math.min(progress, 100);
+            progressBar.style.width = `${displayProgress}%`;
+            progressText.textContent = `${Math.floor(displayProgress)}%`;
+            
+            if (!premiumUnlocked) {
+                premiumButton.disabled = points < 1000;
+            }
+        }
+        
+        function createConfetti() {
+            celebrationEl.style.display = 'block';
+            celebrationEl.innerHTML = '';
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confetti.style.opacity = '1';
+                
+                // Random shape
+                if (Math.random() > 0.5) {
+                    confetti.style.borderRadius = '50%';
+                }
+                
+                celebrationEl.appendChild(confetti);
+                
+                // Animation
+                const animation = confetti.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(${window.innerHeight}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+                ], {
+                    duration: 1000 + Math.random() * 2000,
+                    easing: 'cubic-bezier(0.1, 0.8, 0.9, 1)'
+                });
+                
+                animation.onfinish = () => {
+                    confetti.remove();
+                    if (celebrationEl.children.length === 0) {
+                        celebrationEl.style.display = 'none';
+                    }
+                };
+            }
+        }
+    </script>
+</body>
+</html>
